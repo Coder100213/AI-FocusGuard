@@ -1,5 +1,6 @@
 streamlit
-streamlit-webrtc
+streamlit-webrtc==0.47.1
+tornado==6.3.3
 opencv-python-headless
-numpy
+numpy<2.0.0
 av
