@@ -7,7 +7,7 @@ import av
 # --- 1. PAGE SETUP ---
 st.set_page_config(page_title="FocusGuard AI", page_icon="🧠", layout="centered")
 
-# --- 2. NAVIGATION ---
+# --- 2. NAVIGATION LOGIC ---
 if 'page' not in st.session_state:
     st.session_state.page = 'Home'
 
@@ -20,10 +20,12 @@ if st.session_state.page == 'Home':
     st.subheader("Master your productivity with Real-Time AI Monitoring.")
     
     st.markdown("""
-    ### 📝 Quick Start Guide:
+    ### 📝 How to Use:
     1. **Position yourself** in a well-lit area.
-    2. **Launch the Monitor** to start tracking.
-    3. **Stay Focused:** The AI alerts you if you look away.
+    2. **Click Start** to open the Live Monitor.
+    3. **Stay Focused:** The AI tracks your eyes and posture.
+    
+    *Privacy: No video data is ever stored or uploaded.*
     """)
     
     if st.button("Launch Live Session"):
@@ -43,7 +45,7 @@ elif st.session_state.page == 'App':
 
     class FocusProcessor(VideoProcessorBase):
         def __init__(self):
-            # Load the face detection model
+            # Load the AI model
             self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
             self.focus_count = 0
             self.total_frames = 0
@@ -58,11 +60,12 @@ elif st.session_state.page == 'App':
             if len(faces) > 0:
                 self.focus_count += 1
                 for (x, y, w, h) in faces:
+                    # Drawing the green tracking box
                     cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 3)
             
             return av.VideoFrame.from_ndarray(img, format="bgr24")
 
-    # THE LIVE STREAM
+    # --- THE LIVE STREAM ENGINE ---
     ctx = webrtc_streamer(
         key="focus-stream",
         video_processor_factory=FocusProcessor,
@@ -70,6 +73,7 @@ elif st.session_state.page == 'App':
             "iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]
         },
         media_stream_constraints={"video": True, "audio": False},
+        async_processing=True
     )
 
     if ctx.video_processor:
@@ -78,6 +82,7 @@ elif st.session_state.page == 'App':
         rate = (c / t * 100) if t > 0 else 0
         st.metric("Live Focus Rate", f"{rate:.2f}%")
 
-    # SIDEBAR REVENUE
+    # --- REVENUE / SIDEBAR ---
     st.sidebar.title("App Sponsors")
+    st.sidebar.info("Support FocusGuard to keep it free!")
     st.sidebar.image("https://via.placeholder.com/300x250.png?text=Sidebar+Ad")
