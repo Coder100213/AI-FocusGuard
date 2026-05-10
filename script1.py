@@ -7,18 +7,12 @@ import av
 # --- 1. PAGE SETUP ---
 st.set_page_config(page_title="FocusGuard AI", page_icon="🧠", layout="centered")
 
-# Custom CSS for a premium look
-st.markdown("""
-    <style>
-    .stButton>button { width: 100%; border-radius: 25px; height: 3.5em; background-color: #2e7d32; color: white; font-weight: bold; }
-    </style>
-    """, unsafe_allow_html=True)
-
 # --- 2. NAVIGATION ---
 if 'page' not in st.session_state:
     st.session_state.page = 'Home'
 
-def change_page(p): st.session_state.page = p
+def change_page(p): 
+    st.session_state.page = p
 
 # --- 3. PAGE: HOME / INSTRUCTIONS ---
 if st.session_state.page == 'Home':
@@ -32,17 +26,24 @@ if st.session_state.page == 'Home':
     3. **Stay Focused:** The AI alerts you if you look away.
     """)
     
-    st.button("Launch Live Session", on_click=change_page, args=('App',))
+    if st.button("Launch Live Session"):
+        change_page('App')
+        st.rerun()
+
     st.write("---")
-    st.image("https://via.placeholder.com/728x90.png?text=Google+AdSense+Space")
+    st.caption("Ad Space")
+    st.image("https://via.placeholder.com/728x90.png?text=Google+AdSense+Banner")
 
 # --- 4. PAGE: LIVE MONITORING ---
 elif st.session_state.page == 'App':
     st.title("🧠 Live Focus Monitor")
-    st.button("⬅ Back to Home", on_click=change_page, args=('Home',))
+    if st.button("⬅ Back to Home"):
+        change_page('Home')
+        st.rerun()
 
     class FocusProcessor(VideoProcessorBase):
         def __init__(self):
+            # Load the face detection model
             self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
             self.focus_count = 0
             self.total_frames = 0
@@ -50,6 +51,7 @@ elif st.session_state.page == 'App':
         def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
             img = frame.to_ndarray(format="bgr24")
             self.total_frames += 1
+            
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             faces = self.face_cascade.detectMultiScale(gray, 1.3, 5)
             
@@ -60,6 +62,7 @@ elif st.session_state.page == 'App':
             
             return av.VideoFrame.from_ndarray(img, format="bgr24")
 
+    # THE LIVE STREAM
     ctx = webrtc_streamer(
         key="focus-stream",
         video_processor_factory=FocusProcessor,
@@ -75,5 +78,6 @@ elif st.session_state.page == 'App':
         rate = (c / t * 100) if t > 0 else 0
         st.metric("Live Focus Rate", f"{rate:.2f}%")
 
-    st.sidebar.title("Ad Partners")
+    # SIDEBAR REVENUE
+    st.sidebar.title("App Sponsors")
     st.sidebar.image("https://via.placeholder.com/300x250.png?text=Sidebar+Ad")
